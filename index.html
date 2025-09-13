@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Whooshie • Speedtest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --brand: 167 139 250; 
+      --brand-strong: 139 92 246; 
+      --bg: 10 11 19; 
+      --glow: 167 139 250; 
+
+      --glass-bg: radial-gradient(circle at top left, rgba(255,255,255,0.06), rgba(255,255,255,0.02) 50%);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-shadow: rgba(0,0,0,0.35);
+    }
+    html, body { height: 100%; }
+    body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: rgb(var(--bg)/1); color: white; }
+
+    .aurora { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .aurora::before { content: ""; position: absolute; inset: -20vmax; filter: blur(70px) saturate(140%);
+      background:
+        radial-gradient(60vmax 60vmax at 10% 15%, rgba(99,102,241,.30), transparent 60%),
+        radial-gradient(50vmax 50vmax at 85% 10%, rgba(56,189,248,.28), transparent 60%),
+        radial-gradient(65vmax 65vmax at 15% 85%, rgba(52,211,153,.30), transparent 60%),
+        radial-gradient(55vmax 55vmax at 90% 75%, rgba(244,114,182,.22), transparent 60%),
+        radial-gradient(40vmax 40vmax at 50% 50%, rgba(250,204,21,.10), transparent 60%);
+      animation: drift 38s ease-in-out infinite alternate;
+    }
+    @keyframes drift {
+      0%   { transform: translate3d(-2%, -1%, 0) scale(1); }
+      50%  { transform: translate3d(2%, 1%, 0) scale(1.05); }
+      100% { transform: translate3d(-1%, 2%, 0) scale(1.02); }
+    }
+    @media (prefers-reduced-motion: reduce) { .aurora::before { animation: none; } }
+
+    .glass-panel {
+        background: var(--glass-bg);
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
+        box-shadow: 0 10px 40px var(--glass-shadow);
+        border-radius: 1.5rem;
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+    }
+    .glass-panel::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(145deg, var(--glass-border), rgba(255,255,255,0.03));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+    
+    .orb-wrap { position: relative; display: grid; place-items: center; }
+    .orb { display:grid; place-items:center; border-radius:9999px; box-shadow: 0 0 0 1px rgba(255,255,255,.15), 0 22px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.25);
+      background: radial-gradient(120% 120% at 50% 0%, rgba(255,255,255,0.70), rgba(255,255,255,0.16) 60%, rgba(255,255,255,0.08) 100%);
+      transition: all .35s cubic-bezier(0.2, 1, 0.3, 1); }
+    .orb:hover:not(.testing) { transform: scale(1.05); filter: brightness(1.1); }
+    .orb.testing { transform: scale(.97); opacity: .92; cursor: not-allowed; filter: saturate(.95); }
+
+    .orb-ring svg { position:absolute; inset:0; }
+    .progress { transition: stroke-dashoffset .35s cubic-bezier(.65,0,.35,1); transform: rotate(-90deg); transform-origin: 50% 50%; }
+
+    .badge { position:absolute; bottom:8%; right:8%; font-size:.70rem; background: rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.25); padding:.25rem .45rem; border-radius:.5rem; }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.1rem;
+        border-radius: 9999px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.12);
+        transition: all .2s ease;
+        font-weight: 500;
+    }
+    .btn:hover { background: rgba(255,255,255,0.14); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .btn-brand {
+        background: rgb(var(--brand-strong));
+        border-color: rgba(255,255,255,0.18);
+        color: white;
+        box-shadow: 0 5px 20px rgba(var(--brand-strong), 0.3);
+    }
+    .btn-brand:hover { filter: brightness(1.1); box-shadow: 0 8px 25px rgba(var(--brand-strong), 0.4); }
+
+    .history-item {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        transition: background .2s ease;
+    }
+    .history-item:hover { background: rgba(255,255,255,0.05); }
+    .history-item:last-child { border-bottom: none; }
+    @media (min-width: 768px) {
+      .history-item {
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      }
+    }
+
+    .icon { width: 1.1rem; height: 1.1rem; opacity:.9; }
+    .icon-sm { width: 1rem; height: 1rem; }
+  </style>
+</head>
+<body class="min-h-screen text-white antialiased selection:bg-white/20">
+  <div class="aurora" aria-hidden="true"></div>
+
+  <main class="relative z-10 mx-auto max-w-5xl px-4 py-6 sm:py-12">
+    <section class="glass-panel p-4 sm:p-8">
+      <div class="flex items-center justify-between pb-4 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl grid place-items-center" style="background: linear-gradient(135deg, rgba(var(--brand-strong)/.9), rgba(var(--brand)/.9)); box-shadow: inset 0 1px rgba(255,255,255,.4);">
+           <svg class="w-6 h-6" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor" d="m119.51 143.51l88-88a12 12 0 1 1 17 17l-88 88a12 12 0 1 1-17-17m14.23-43.2a12 12 0 1 0 2.62-23.85A75.15 75.15 0 0 0 128 76a76.08 76.08 0 0 0-76 76a12 12 0 0 0 24 0a52.06 52.06 0 0 1 52-52a54.75 54.75 0 0 1 5.74.31m101.54 7.5a12 12 0 0 0-22.19 9.19a92.47 92.47 0 0 1 2.58 63H40.34A92.23 92.23 0 0 1 128 60h.84a91.43 91.43 0 0 1 34.2 6.91a12 12 0 0 0 9.14-22.19A116.07 116.07 0 0 0 18.57 190.58A20.09 20.09 0 0 0 37.46 204h181.07a20.06 20.06 0 0 0 18.88-13.38a116.39 116.39 0 0 0-2.13-82.81"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl sm:text-2xl font-extrabold" style="letter-spacing:.2px;">Whooshie</h1>
+            <p class="text-xs text-white/60">powered by Cloudflare</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-8 sm:pt-12">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+            <div class="text-center transition-opacity duration-300" id="download-display">
+                <div class="flex items-center justify-center gap-2 text-white/70">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M19 21H5"/></svg>
+                    <span class="text-lg">Download</span>
+                </div>
+                <div id="download-value" class="text-5xl sm:text-6xl font-black mt-2 tracking-tighter">-</div>
+                <div class="text-white/50">Mbps</div>
+            </div>
+
+            <div class="orb-wrap order-first lg:order-none mx-auto" style="width:clamp(10rem, 40vw, 15rem); height:clamp(10rem, 40vw, 15rem);">
+                <div class="orb-ring absolute inset-0">
+                  <svg viewBox="0 0 120 120" class="w-full h-full">
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12"/>
+                    <circle id="overall-progress" class="progress" cx="60" cy="60" r="54" fill="none" stroke="rgb(var(--brand-strong))" stroke-width="12" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>
+                  </svg>
+                </div>
+                <button id="startButton" class="orb relative z-10" style="width:100%; height:100%;">
+                  <div class="text-center leading-tight">
+                    <div id="orb-line-1" class="text-sm text-white/70">Tap to</div>
+                    <div id="orb-line-2" class="text-2xl sm:text-3xl font-extrabold">GO</div>
+                  </div>
+                  <span id="orb-badge" class="badge hidden">Ready</span>
+                </button>
+            </div>
+            
+            <div class="text-center transition-opacity duration-300" id="upload-display">
+                <div class="flex items-center justify-center gap-2 text-white/70">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="M17 14l-5-5-5 5"/><path d="M19 3H5"/></svg>
+                    <span class="text-lg">Upload</span>
+                </div>
+                <div id="upload-value" class="text-5xl sm:text-6xl font-black mt-2 tracking-tighter">-</div>
+                <div class="text-white/50">Mbps</div>
+            </div>
+        </div>
+
+        <div class="mt-8 sm:mt-12 mx-auto max-w-2xl text-center">
+            <p id="status" class="text-sm sm:text-base text-white/80 h-5 mb-4"></p>
+            <div class="glass-panel p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-around gap-4">
+                <div class="flex items-center gap-3">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h7"/><path d="M13 12h8"/><path d="M10 9l3 3-3 3"/></svg>
+                    <span class="text-white/60">Ping:</span>
+                    <span id="ping-value" class="text-xl font-bold">-</span>
+                    <span class="text-white/50">ms</span>
+                </div>
+                <div class="w-px h-6 bg-white/10 hidden sm:block"></div>
+                 <div class="flex items-center gap-2">
+                    <span class="text-white/60">IP:</span>
+                    <span id="ip-info" class="font-mono text-sm"><span class="inline-block w-28 h-4 rounded bg-white/10 animate-pulse"></span></span>
+                </div>
+                <div class="w-px h-6 bg-white/10 hidden sm:block"></div>
+                <div class="flex items-center gap-2">
+                    <span class="text-white/60">PoP:</span>
+                    <span id="isp-info" class="font-mono text-sm"><span class="inline-block w-20 h-4 rounded bg-white/10 animate-pulse"></span></span>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <div class="mt-12">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xl font-semibold" style="color: rgb(var(--brand-strong));">History</h3>
+          <button id="clearHistoryBtn" class="btn text-xs">
+            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Clear History
+          </button>
+        </div>
+        <div id="historyContainer" class="glass-panel rounded-2xl mt-4">
+            <div id="historyList" class="divide-y divide-white/10"></div>
+        </div>
+      </div>
+    </section>
+
+    <p class="text-center text-white/50 text-xs mt-8">© <span id="year"></span> Whooshie • Designed with ❤️ by <strong>Ardan Ridho</strong></p>
+  </main>
+
+  <script>
+    const startButton = document.getElementById('startButton');
+    const orbLine1 = document.getElementById('orb-line-1');
+    const orbLine2 = document.getElementById('orb-line-2');
+    const orbBadge = document.getElementById('orb-badge');
+    const overallProgressEl = document.getElementById('overall-progress');
+
+    const statusEl = document.getElementById('status');
+    const pingValueEl = document.getElementById('ping-value');
+    const downloadValueEl = document.getElementById('download-value');
+    const uploadValueEl = document.getElementById('upload-value');
+    const ipInfoEl = document.getElementById('ip-info');
+    const ispInfoEl = document.getElementById('isp-info');
+    
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const historyList = document.getElementById('historyList');
+
+    const PING_COUNT = 8;
+    const PING_URL = 'https://speed.cloudflare.com/cdn-cgi/trace';
+    const DOWNLOAD_URL = 'https://speed.cloudflare.com/__down';
+    const UPLOAD_URL = 'https://speed.cloudflare.com/__up';
+    const DOWNLOAD_BYTES = 120 * 1024 * 1024;
+    const DOWNLOAD_TARGET_SECONDS = 4;
+    const UPLOAD_SIZES_BYTES = [4 * 1024 * 1024, 8 * 1024 * 1024, 16 * 1024 * 1024];
+
+    const W_PING = 0.25, W_DOWN = 0.45, W_UP = 0.30;
+
+    let isTesting = false;
+    let controllers = [];
+
+    function setOrb(textTop, textBottom, badge){
+      orbLine1.textContent = textTop || '';
+      orbLine2.textContent = textBottom || '';
+      if (badge) { orbBadge.textContent = badge; orbBadge.classList.remove('hidden'); }
+      else { orbBadge.classList.add('hidden'); }
+    }
+    function setOverallProgress(p){ // 0..1
+      const pct = Math.max(0, Math.min(1, p)) * 100;
+      overallProgressEl.style.strokeDashoffset = 100 - pct;
+    }
+
+    function primeUI(){
+      statusEl.textContent = '';
+      pingValueEl.textContent = '-';
+      downloadValueEl.textContent = '-';
+      uploadValueEl.textContent = '-';
+      setOrb('Tap to', 'GO', 'Ready');
+      setOverallProgress(0);
+    }
+    
+    async function fetchIPInfo() {
+      try {
+        const response = await fetch(PING_URL);
+        const text = await response.text();
+        const data = text.split('\n').reduce((acc, line) => {
+          const [key, value] = line.split('=');
+          if (key) acc[key.trim()] = (value||'').trim();
+          return acc;
+        }, {});
+        ipInfoEl.textContent = data.ip || 'N/A';
+        ispInfoEl.textContent = data.colo || 'N/A';
+      } catch (e) {
+        ipInfoEl.textContent = 'Unavailable';
+        ispInfoEl.textContent = 'Unavailable';
+      }
+    }
+
+    async function measurePing() {
+      statusEl.textContent = 'Testing Ping…';
+      setOrb('Pinging…', '—', 'Latency');
+      const latencies = [];
+      for (let i = 0; i < PING_COUNT; i++) {
+        const ctrl = new AbortController(); controllers.push(ctrl);
+        const t0 = performance.now();
+        try { await fetch(`${PING_URL}?_=${Date.now()}`, { cache: 'no-store', signal: ctrl.signal }); } catch (_) {}
+        const dt = performance.now() - t0;
+        latencies.push(dt);
+        const instant = Math.round(dt);
+        pingValueEl.textContent = instant;
+        setOrb('Ping', `${instant} ms`);
+        const prog = (i+1)/PING_COUNT;
+        setOverallProgress(W_PING * prog);
+        await new Promise(r => setTimeout(r, 80));
+      }
+      latencies.sort((a,b)=>a-b);
+      const median = latencies[Math.floor(latencies.length/2)] || 0;
+      pingValueEl.textContent = Math.round(median);
+      setOrb('Ping', `${Math.round(median)} ms`);
+      return median;
+    }
+
+    async function measureDownloadSpeedStream() {
+      statusEl.textContent = 'Testing Download…';
+      setOrb('Download', '—', 'Streaming');
+      const ctrl = new AbortController(); controllers.push(ctrl);
+      const startTime = performance.now();
+      let received = 0;
+      let finalMbps = 0;
+      try {
+        const res = await fetch(`${DOWNLOAD_URL}?bytes=${DOWNLOAD_BYTES}&_=${Date.now()}`, { cache: 'no-store', signal: ctrl.signal });
+        const reader = res.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          received += value.length;
+          const secs = (performance.now() - startTime)/1000;
+          if (secs > 0.15) {
+            const mbps = (received * 8) / (secs * 1_000_000);
+            downloadValueEl.textContent = mbps.toFixed(1);
+            setOrb('Down', `${mbps.toFixed(1)} Mb/s`);
+            const dProg = Math.min(1, secs / DOWNLOAD_TARGET_SECONDS);
+            setOverallProgress(W_PING + W_DOWN * dProg);
+          }
+          if (((performance.now() - startTime)/1000) >= DOWNLOAD_TARGET_SECONDS) { ctrl.abort(); break; }
+        }
+      } catch (_) {}
+      const totalSecs = (performance.now() - startTime)/1000;
+      if (totalSecs > 0) {
+        finalMbps = (received * 8) / (totalSecs * 1_000_000);
+        downloadValueEl.textContent = finalMbps.toFixed(1);
+        setOrb('Down', `${finalMbps.toFixed(1)} Mb/s`);
+        setOverallProgress(W_PING + W_DOWN);
+      }
+      return finalMbps;
+    }
+
+    async function measureUploadSpeed(sizes) {
+      statusEl.textContent = 'Testing Upload…';
+      setOrb('Upload', '—', 'Sending');
+      let totalBytes = 0; let totalTime = 0; let finalMbps = 0;
+      const payloads = sizes.map(size => new Uint8Array(size));
+      for (let i = 0; i < sizes.length; i++) {
+        const size = sizes[i];
+        const ctrl = new AbortController(); controllers.push(ctrl);
+        const t0 = performance.now();
+        try {
+          await fetch(`${UPLOAD_URL}?bytes=${size}&_=${Date.now()}`, { method: 'POST', body: new Blob([payloads[i]]), signal: ctrl.signal });
+        } catch (_) {}
+        const dt = (performance.now() - t0)/1000;
+        totalBytes += size; totalTime += dt;
+        const mbps = totalTime > 0 ? (totalBytes * 8) / (totalTime * 1_000_000) : 0;
+        uploadValueEl.textContent = mbps.toFixed(1);
+        setOrb('Up', `${mbps.toFixed(1)} Mb/s`);
+        const uProg = (i+1) / sizes.length;
+        setOverallProgress(W_PING + W_DOWN + W_UP * uProg);
+      }
+       if (totalTime > 0) {
+           finalMbps = (totalBytes * 8) / (totalTime * 1_000_000);
+           uploadValueEl.textContent = finalMbps.toFixed(1);
+       }
+      return finalMbps;
+    }
+
+    async function startTest() {
+      if (isTesting) return;
+      isTesting = true;
+      setOverallProgress(0);
+      startButton.classList.add('testing');
+      startButton.disabled = true;
+      startButton.setAttribute('aria-busy','true');
+
+      try {
+        primeUI();
+        const ping = await measurePing();
+        const down = await measureDownloadSpeedStream();
+        const up = await measureUploadSpeed(UPLOAD_SIZES_BYTES);
+        
+        statusEl.textContent = 'Test Complete! Results saved.';
+        setOrb('Complete', 'Again?', 'Saved');
+        
+        saveToHistory({
+          ts: Date.now(),
+          ping: parseFloat(ping.toFixed(1)) || null,
+          down: parseFloat(down.toFixed(1)) || null,
+          up: parseFloat(up.toFixed(1)) || null,
+          ip: ipInfoEl.textContent || '',
+          pop: ispInfoEl.textContent || ''
+        });
+        renderHistory();
+      } catch (e) {
+        statusEl.textContent = 'An error occurred. Please try again.';
+        setOrb('Error', 'Try Again');
+        console.error(e);
+      } finally {
+        controllers = [];
+        startButton.classList.remove('testing');
+        startButton.disabled = false;
+        startButton.setAttribute('aria-busy','false');
+        isTesting = false;
+      }
+    }
+
+    const HISTORY_KEY = 'whooshie.history';
+    function getHistory(){ try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch(_) { return []; } }
+    function setHistory(arr){ try { localStorage.setItem(HISTORY_KEY, JSON.stringify(arr)); } catch(_) {} }
+    function saveToHistory(entry){ const arr = getHistory(); arr.unshift(entry); setHistory(arr.slice(0,30)); }
+    function removeHistoryAt(index){ const arr = getHistory(); arr.splice(index,1); setHistory(arr); }
+    function clearHistory(){ setHistory([]); }
+
+    function fmtTs(ts){ try { return new Date(ts).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch(_) { return '';} }
+
+    function renderHistory(){
+      const items = getHistory();
+      if (!items.length){
+          historyList.innerHTML = '<div class="text-white/50 text-sm text-center p-8">No history yet. Run a test to save results.</div>';
+          return;
+      }
+      historyList.innerHTML = '';
+      items.forEach((it, idx) => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `
+          <div class="text-sm text-white/90 flex flex-col sm:flex-row sm:items-center sm:gap-2">
+            <span class="font-medium">${fmtTs(it.ts)}</span>
+            <span class="text-white/50 text-xs hidden md:inline">• ${it.pop || '-'}</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm"><svg class="icon-sm text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h7"/><path d="M13 12h8"/><path d="M10 9l3 3-3 3"/></svg> Ping <strong class="ml-auto">${it.ping ?? '-'}</strong> ms</div>
+          <div class="flex items-center gap-2 text-sm"><svg class="icon-sm text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M19 21H5"/></svg> Down <strong class="ml-auto">${it.down ?? '-'}</strong> Mbps</div>
+          <div class="flex items-center gap-2 text-sm"><svg class="icon-sm text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="M17 14l-5-5-5 5"/><path d="M19 3H5"/></svg> Up <strong class="ml-auto">${it.up ?? '-'}</strong> Mbps</div>
+          <div class="flex items-center gap-2 justify-start md:justify-end mt-2 md:mt-0">
+            <button class="btn text-xs" data-copy>Copy</button>
+            <button class="btn text-xs" data-del>Delete</button>
+          </div>
+        `;
+        div.querySelector('[data-copy]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          const text = `Whooshie Speedtest\nTime: ${fmtTs(it.ts)}\nPing: ${it.ping} ms\nDownload: ${it.down} Mb/s\nUpload: ${it.up} Mb/s\nIP: ${it.ip}\nPoP: ${it.pop}`;
+          navigator.clipboard.writeText(text);
+          statusEl.textContent = 'History entry copied.'; setTimeout(()=> statusEl.textContent='', 1500);
+        });
+        div.querySelector('[data-del]').addEventListener('click', (e) => { e.stopPropagation(); removeHistoryAt(idx); renderHistory(); });
+        historyList.appendChild(div);
+      });
+    }
+
+    window.onload = () => {
+      document.getElementById('year').textContent = new Date().getFullYear();
+      fetchIPInfo();
+      primeUI();
+      startButton.addEventListener('click', startTest);
+      clearHistoryBtn.addEventListener('click', () => { clearHistory(); renderHistory(); });
+      renderHistory();
+    };
+  </script>
+</body>
+</html>
+
