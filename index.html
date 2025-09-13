@@ -40,27 +40,15 @@
     @media (prefers-reduced-motion: reduce) { .aurora::before { animation: none; } }
 
     .glass-panel {
-        /* --- Fallback Style for browsers that don't support backdrop-filter --- */
-        background-color: rgba(255, 255, 255, 0.1);
-        
-        /* --- Common Styles --- */
+        background: var(--glass-bg);
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
         box-shadow: 0 10px 40px var(--glass-shadow);
         border-radius: 1.5rem;
         position: relative;
         z-index: 1;
         overflow: hidden;
     }
-
-    /* --- Progressive Enhancement for the Glass Effect --- */
-    @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-        .glass-panel {
-            background-color: rgba(255, 255, 255, 0.05);
-            background-image: var(--glass-bg);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-        }
-    }
-    
     .glass-panel::before {
         content: '';
         position: absolute;
@@ -72,6 +60,17 @@
         -webkit-mask-composite: xor;
         mask-composite: exclude;
         pointer-events: none;
+    }
+
+    /* --- FINAL FIX: Specific override for iPhone Safari rendering bug --- */
+    .is-iphone-safari .glass-panel {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+      background: rgba(35, 35, 55, 0.25) !important; /* A safe, solid, semi-transparent color */
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .is-iphone-safari .glass-panel::before {
+      display: none !important;
     }
     
     .orb-wrap { position: relative; display: grid; place-items: center; }
@@ -224,6 +223,19 @@
   </main>
 
   <script>
+    // --- FINAL FIX: Detect iPhone Safari and add a CSS class to the body ---
+    (function() {
+      const ua = navigator.userAgent;
+      const isIOS = /iPad|iPhone|iPod/.test(ua);
+      // Check for Safari, but not Chrome/Chromium on iOS
+      const isSafari = /AppleWebKit/.test(ua) && !/CriOS/.test(ua) && !/FxiOS/.test(ua);
+      
+      if (isIOS && isSafari && /iPhone/.test(ua)) {
+        document.body.classList.add('is-iphone-safari');
+      }
+    })();
+
+
     const startButton = document.getElementById('startButton');
     const orbLine1 = document.getElementById('orb-line-1');
     const orbLine2 = document.getElementById('orb-line-2');
