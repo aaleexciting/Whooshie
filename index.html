@@ -40,6 +40,7 @@
     @media (prefers-reduced-motion: reduce) { .aurora::before { animation: none; } }
 
     .glass-panel {
+        background-color: rgba(255, 255, 255, 0.05); /* Fallback for older browsers / Safari bug */
         background: var(--glass-bg);
         backdrop-filter: blur(40px);
         -webkit-backdrop-filter: blur(40px);
@@ -437,9 +438,35 @@
         `;
         div.querySelector('[data-copy]').addEventListener('click', (e) => {
           e.stopPropagation();
-          const text = `Whooshie Speedtest\nTime: ${fmtTs(it.ts)}\nPing: ${it.ping} ms\nDownload: ${it.down} Mb/s\nUpload: ${it.up} Mb/s\nIP: ${it.ip}\nPoP: ${it.pop}`;
-          navigator.clipboard.writeText(text);
-          statusEl.textContent = 'History entry copied.'; setTimeout(()=> statusEl.textContent='', 1500);
+          const textToCopy = `Whooshie Speedtest\nTime: ${fmtTs(it.ts)}\nPing: ${it.ping} ms\nDownload: ${it.down} Mb/s\nUpload: ${it.up} Mb/s\nIP: ${it.ip}\nPoP: ${it.pop}`;
+          
+          const textArea = document.createElement('textarea');
+          textArea.value = textToCopy;
+          // Prevent screen from scrolling
+          textArea.style.position = 'fixed';
+          textArea.style.top = '0';
+          textArea.style.left = '0';
+          textArea.style.width = '2em';
+          textArea.style.height = '2em';
+          textArea.style.padding = '0';
+          textArea.style.border = 'none';
+          textArea.style.outline = 'none';
+          textArea.style.boxShadow = 'none';
+          textArea.style.background = 'transparent';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+
+          try {
+            const successful = document.execCommand('copy');
+            statusEl.textContent = successful ? 'History entry copied.' : 'Copy failed.';
+          } catch (err) {
+            statusEl.textContent = 'Copy failed.';
+            console.error('Fallback copy failed', err);
+          }
+
+          document.body.removeChild(textArea);
+          setTimeout(() => statusEl.textContent = '', 2000);
         });
         div.querySelector('[data-del]').addEventListener('click', (e) => { e.stopPropagation(); removeHistoryAt(idx); renderHistory(); });
         historyList.appendChild(div);
@@ -457,4 +484,3 @@
   </script>
 </body>
 </html>
-
