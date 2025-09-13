@@ -62,11 +62,11 @@
         pointer-events: none;
     }
 
-    /* --- FINAL FIX: Specific override for iPhone Safari rendering bug --- */
+    /* Specific override for iPhone Safari rendering bug */
     .is-iphone-safari .glass-panel {
       -webkit-backdrop-filter: none !important;
       backdrop-filter: none !important;
-      background: rgba(35, 35, 55, 0.25) !important; /* A safe, solid, semi-transparent color */
+      background: rgba(35, 35, 55, 0.25) !important;
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .is-iphone-safari .glass-panel::before {
@@ -182,25 +182,39 @@
             </div>
         </div>
 
-        <div class="mt-8 sm:mt-12 mx-auto max-w-2xl text-center">
+        <div class="mt-8 sm:mt-12 mx-auto max-w-3xl text-center">
             <p id="status" class="text-sm sm:text-base text-white/80 h-5 mb-4"></p>
-            <div class="glass-panel p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-around gap-4">
-                <div class="flex items-center gap-3">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h7"/><path d="M13 12h8"/><path d="M10 9l3 3-3 3"/></svg>
-                    <span class="text-white/60">Ping:</span>
-                    <span id="ping-value" class="text-xl font-bold">-</span>
-                    <span class="text-white/50">ms</span>
-                </div>
-                <div class="w-px h-6 bg-white/10 hidden sm:block"></div>
-                 <div class="flex items-center gap-2">
-                    <span class="text-white/60">IP:</span>
-                    <span id="ip-info" class="font-mono text-sm"><span class="inline-block w-28 h-4 rounded bg-white/10 animate-pulse"></span></span>
-                </div>
-                <div class="w-px h-6 bg-white/10 hidden sm:block"></div>
-                <div class="flex items-center gap-2">
-                    <span class="text-white/60">PoP:</span>
-                    <span id="isp-info" class="font-mono text-sm"><span class="inline-block w-20 h-4 rounded bg-white/10 animate-pulse"></span></span>
-                </div>
+            <div class="glass-panel p-4 sm:p-6 rounded-2xl">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-left">
+                  <div class="flex items-center gap-3">
+                      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h7"/><path d="M13 12h8"/><path d="M10 9l3 3-3 3"/></svg>
+                      <div class="flex-1">
+                          <div class="text-white/60 text-sm">Ping</div>
+                          <div class="text-lg font-bold"><span id="ping-value">-</span> ms</div>
+                      </div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <div class="flex-1">
+                          <div class="text-white/60 text-sm">IP Address</div>
+                          <div id="ip-info" class="font-mono text-sm leading-tight pt-1"><span class="inline-block w-28 h-4 rounded bg-white/10 animate-pulse"></span></div>
+                      </div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                      <div class="flex-1">
+                          <div class="text-white/60 text-sm">Provider</div>
+                          <div id="isp-display" class="font-medium leading-tight pt-1"><span class="inline-block w-32 h-4 rounded bg-white/10 animate-pulse"></span></div>
+                      </div>
+                  </div>
+                   <div class="flex items-center gap-3">
+                      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                      <div class="flex-1">
+                          <div class="text-white/60 text-sm">Server</div>
+                          <div id="pop-info" class="font-mono text-sm leading-tight pt-1"><span class="inline-block w-20 h-4 rounded bg-white/10 animate-pulse"></span></div>
+                      </div>
+                  </div>
+              </div>
             </div>
         </div>
       </div>
@@ -223,18 +237,16 @@
   </main>
 
   <script>
-    // --- FINAL FIX: Detect iPhone Safari and add a CSS class to the body ---
+    // Detect iPhone Safari and add a CSS class to the body
     (function() {
       const ua = navigator.userAgent;
       const isIOS = /iPad|iPhone|iPod/.test(ua);
-      // Check for Safari, but not Chrome/Chromium on iOS
       const isSafari = /AppleWebKit/.test(ua) && !/CriOS/.test(ua) && !/FxiOS/.test(ua);
       
       if (isIOS && isSafari && /iPhone/.test(ua)) {
         document.body.classList.add('is-iphone-safari');
       }
     })();
-
 
     const startButton = document.getElementById('startButton');
     const orbLine1 = document.getElementById('orb-line-1');
@@ -247,13 +259,15 @@
     const downloadValueEl = document.getElementById('download-value');
     const uploadValueEl = document.getElementById('upload-value');
     const ipInfoEl = document.getElementById('ip-info');
-    const ispInfoEl = document.getElementById('isp-info');
+    const popInfoEl = document.getElementById('pop-info');
+    const ispDisplayEl = document.getElementById('isp-display');
     
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
     const historyList = document.getElementById('historyList');
 
     const PING_COUNT = 8;
     const PING_URL = 'https://speed.cloudflare.com/cdn-cgi/trace';
+    const ISP_INFO_URL = 'https://ipinfo.io/json';
     const DOWNLOAD_URL = 'https://speed.cloudflare.com/__down';
     const UPLOAD_URL = 'https://speed.cloudflare.com/__up';
     const DOWNLOAD_BYTES = 120 * 1024 * 1024;
@@ -285,7 +299,7 @@
       setOverallProgress(0);
     }
     
-    async function fetchIPInfo() {
+    async function fetchNetworkInfo() {
       try {
         const response = await fetch(PING_URL);
         const text = await response.text();
@@ -295,10 +309,19 @@
           return acc;
         }, {});
         ipInfoEl.textContent = data.ip || 'N/A';
-        ispInfoEl.textContent = data.colo || 'N/A';
+        popInfoEl.textContent = data.colo || 'N/A';
       } catch (e) {
         ipInfoEl.textContent = 'Unavailable';
-        ispInfoEl.textContent = 'Unavailable';
+        popInfoEl.textContent = 'Unavailable';
+      }
+      try {
+        const response = await fetch(ISP_INFO_URL);
+        const data = await response.json();
+        // Clean up the org string from ASN
+        const isp = (data.org || 'N/A').replace(/^AS\d+\s/, '');
+        ispDisplayEl.textContent = isp;
+      } catch (e) {
+        ispDisplayEl.textContent = 'Unavailable';
       }
     }
 
@@ -411,7 +434,8 @@
           down: parseFloat(down.toFixed(1)) || null,
           up: parseFloat(up.toFixed(1)) || null,
           ip: ipInfoEl.textContent || '',
-          pop: ispInfoEl.textContent || ''
+          pop: popInfoEl.textContent || '',
+          isp: ispDisplayEl.textContent || ''
         });
         renderHistory();
       } catch (e) {
@@ -449,7 +473,7 @@
         div.innerHTML = `
           <div class="text-sm text-white/90 flex flex-col sm:flex-row sm:items-center sm:gap-2">
             <span class="font-medium">${fmtTs(it.ts)}</span>
-            <span class="text-white/50 text-xs hidden md:inline">• ${it.pop || '-'}</span>
+            <span class="text-white/50 text-xs hidden md:inline">• ${it.isp || '-'} (${it.pop || '-'})</span>
           </div>
           <div class="flex items-center gap-2 text-sm"><svg class="icon-sm text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h7"/><path d="M13 12h8"/><path d="M10 9l3 3-3 3"/></svg> Ping <strong class="ml-auto">${it.ping ?? '-'}</strong> ms</div>
           <div class="flex items-center gap-2 text-sm"><svg class="icon-sm text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M19 21H5"/></svg> Down <strong class="ml-auto">${it.down ?? '-'}</strong> Mbps</div>
@@ -461,31 +485,22 @@
         `;
         div.querySelector('[data-copy]').addEventListener('click', (e) => {
           e.stopPropagation();
-          const textToCopy = `Whooshie Speedtest\nTime: ${fmtTs(it.ts)}\nPing: ${it.ping} ms\nDownload: ${it.down} Mb/s\nUpload: ${it.up} Mb/s\nIP: ${it.ip}\nPoP: ${it.pop}`;
+          const textToCopy = `Whooshie Speedtest\nTime: ${fmtTs(it.ts)}\nISP: ${it.isp}\nPing: ${it.ping} ms\nDownload: ${it.down} Mb/s\nUpload: ${it.up} Mb/s\nIP: ${it.ip}\nServer: ${it.pop}`;
           
           const textArea = document.createElement('textarea');
           textArea.value = textToCopy;
-          // Prevent screen from scrolling
           textArea.style.position = 'fixed';
           textArea.style.top = '0';
           textArea.style.left = '0';
-          textArea.style.width = '2em';
-          textArea.style.height = '2em';
-          textArea.style.padding = '0';
-          textArea.style.border = 'none';
-          textArea.style.outline = 'none';
-          textArea.style.boxShadow = 'none';
-          textArea.style.background = 'transparent';
           document.body.appendChild(textArea);
           textArea.focus();
           textArea.select();
 
           try {
-            const successful = document.execCommand('copy');
-            statusEl.textContent = successful ? 'History entry copied.' : 'Copy failed.';
+            document.execCommand('copy');
+            statusEl.textContent = 'History entry copied.';
           } catch (err) {
             statusEl.textContent = 'Copy failed.';
-            console.error('Fallback copy failed', err);
           }
 
           document.body.removeChild(textArea);
@@ -498,7 +513,7 @@
 
     window.onload = () => {
       document.getElementById('year').textContent = new Date().getFullYear();
-      fetchIPInfo();
+      fetchNetworkInfo();
       primeUI();
       startButton.addEventListener('click', startTest);
       clearHistoryBtn.addEventListener('click', () => { clearHistory(); renderHistory(); });
